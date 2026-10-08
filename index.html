@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>영어2 2단원 핵심 단어 퀴즈</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+      transition: background-color 0.5s ease;
+    }
+
+    .container {
+      background-color: #fff;
+      width: 100%;
+      max-width: 500px;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    h1, h2 {
+      color: #2c3e50;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+      color: #7f8c8d;
+    }
+
+    .word-card {
+      background-color: #ecf0f1;
+      padding: 3rem 1rem;
+      border-radius: 12px;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 2rem;
+      word-break: keep-all;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      background-color: #fff;
+      color: #333;
+      border: 2px solid #bdc3c7;
+      text-align: left;
+    }
+    .option-btn:hover {
+      background-color: #f1f2f6;
+      border-color: #3498db;
+    }
+
+    .result-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .wrong-list {
+      text-align: left;
+      background-color: #fdfbfb;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .wrong-list li {
+      margin-bottom: 0.5rem;
+      border-bottom: 1px dashed #ccc;
+      padding-bottom: 0.5rem;
+      list-style-position: inside;
+    }
+    .wrong-list li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    body.pass-theme { background-color: #e8f5e9; }
+    body.fail-theme { background-color: #ffebee; }
+    
+    .pass-text { color: #2e7d32; }
+    .fail-text { color: #c62828; }
+
+    .btn-pass { background-color: #2e7d32; }
+    .btn-pass:hover { background-color: #1b5e20; }
+
+    .btn-fail { background-color: #c62828; }
+    .btn-fail:hover { background-color: #b71c1c; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="screen active">
+      <h1>영어2 2단원 핵심 단어 퀴즈</h1>
+      <p>총 15문제 중 <strong>12개 이상</strong> 맞혀야 통과!</p>
+      <button onclick="startQuiz()">퀴즈 시작</button>
+    </div>
+
+    <!-- 퀴즈 진행 화면 -->
+    <div id="quiz-screen" class="screen">
+      <div class="status-bar">
+        <span id="progress-text">1 / 15</span>
+        <span id="score-text">정답: 0개</span>
+      </div>
+      <div class="word-card" id="question-word">
+        Word
+      </div>
+      <div class="options" id="options-container"></div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="screen">
+      <div id="result-icon" class="result-icon">🎉</div>
+      <h2 id="result-title">결과</h2>
+      <p id="result-message">메시지</p>
+      <h3 id="result-score" style="margin-bottom: 1rem;">13 / 15개</h3>
+      
+      <div id="wrong-list-container" style="display: none;">
+        <h4>틀린 단어 복습 노트</h4>
+        <ul class="wrong-list" id="wrong-list"></ul>
+      </div>
+
+      <button id="restart-btn" onclick="startQuiz()">다시 풀기</button>
+    </div>
+  </div>
+
+  <script>
+    // 전체 단어 DB (오류 수정 완료)
+    const wordDB = [
+      { word: "notification", meaning: "알림" },
+      { word: "as a result", meaning: "그 결과" },
+      { word: "inactive", meaning: "활동하지 않는" },
+      { word: "intersection", meaning: "교차로" },
+      { word: "a set amount of", meaning: "일정량의" },
+      { word: "reduce accidents", meaning: "사고를 줄이다" },
+      { word: "realize", meaning: "깨닫다, 인식하다" },
+      { word: "elevate", meaning: "높이다, 향상시키다" },
+      { word: "nudge", meaning: "(팔꿈치로) 슬쩍 찌르다; 부드럽게 유도하다" },
+      { word: "pedestrian", meaning: "보행자" },
+      { word: "intervention", meaning: "개입, 중재" },
+      { word: "be well received", meaning: "좋은 반응을 얻다" },
+      { word: "gently", meaning: "부드럽게" },
+      { word: "mirror", meaning: "반영하다, 그대로 재현하다" },
+      { word: "guide A toward B", meaning: "A를 B 쪽으로 이끌다" },
+      { word: "likewise", meaning: "마찬가지로" },
+      { word: "desired", meaning: "바람직한, 원하는" },
+      { word: "traffic engineer", meaning: "교통 공학 전문가" },
+      { word: "forbid", meaning: "금지하다" },
+      { word: "pavement marking", meaning: "노면 표시" },
+      { word: "option", meaning: "선택지" },
+      { word: "drive A to do", meaning: "A가 ~하도록 몰아가다, 유도하다" },
+      { word: "reduce", meaning: "줄이다, 감소시키다" },
+      { word: "experiment with", meaning: "~을 실험하다" },
+      { word: "sugary", meaning: "설탕이 든, 단" },
+      { word: "a series of", meaning: "일련의" },
+      { word: "consume", meaning: "소비하다, 섭취하다" },
+      { word: "ahead of", meaning: "~보다 앞에" },
+      { word: "visible", meaning: "눈에 보이는" },
+      { word: "curve", meaning: "커브, 굽은 길" },
+      { word: "count as", meaning: "~로 간주되다, ~에 해당하다" },
+      { word: "be spaced", meaning: "간격을 두고 배치되다" },
+      { word: "ban", meaning: "금지하다" },
+      { word: "in such a way that", meaning: "~하는 방식으로" },
+      { word: "altogether", meaning: "완전히, 전적으로" },
+      { word: "gap", meaning: "간격, 틈" },
+      { word: "approach", meaning: "접근하다" },
+      { word: "domain", meaning: "영역, 분야" },
+      { word: "behavioral economics", meaning: "행동경제학" },
+      { word: "illusion", meaning: "착각, 환상" },
+      { word: "apply A to B", meaning: "A를 B에 적용하다" },
+      { word: "speed up", meaning: "속도를 높이다" },
+      { word: "induce A to do", meaning: "A가 ~하도록 유도하다" },
+      { word: "prompt A to do", meaning: "A가 ~하도록 촉구하다, 유도하다" },
+      { word: "ideal", meaning: "이상적인" },
+      { word: "step on the brakes", meaning: "브레이크를 밟다" },
+      { word: "succeed in -ing", meaning: "~하는 데 성공하다" },
+      { word: "reduction", meaning: "감소" },
+      { word: "bring about", meaning: "~을 유발하다, 초래하다" },
+      { word: "crash", meaning: "충돌 사고" },
+      { word: "positive change", meaning: "긍정적인 변화" },
+      { word: "peer pressure", meaning: "동조 압력, 또래 압력" },
+      { word: "tweak", meaning: "약간 수정하다, 조정하다" },
+      { word: "disobey", meaning: "따르지 않다, 위반하다" },
+      { word: "markedly", meaning: "현저하게, 뚜렷하게" },
+      { word: "social norm", meaning: "사회적 규범" },
+      { word: "affect", meaning: "~에 영향을 미치다" },
+      { word: "go along", meaning: "따르다, 동조하다" },
+      { word: "crosswalk", meaning: "횡단보도" },
+      { word: "highlight", meaning: "강조하다" },
+      { word: "motorist", meaning: "운전자" },
+      { word: "compel", meaning: "강요하다" },
+      { word: "roadblock", meaning: "도로 장애물" },
+      { word: "feel compelled to do", meaning: "~해야 한다는 압박을 느끼다" },
+      { word: "slow down", meaning: "속도를 줄이다" },
+      { word: "match A with B", meaning: "A를 B에 맞추다" },
+      { word: "brake", meaning: "브레이크를 밟다" },
+      { word: "majority", meaning: "대다수" },
+      { word: "scheme", meaning: "계획, 제도" },
+      { word: "as planned", meaning: "계획대로" },
+      { word: "adopt", meaning: "채택하다" },
+      { word: "for instance", meaning: "예를 들어" },
+      { word: "in turn", meaning: "결과적으로, 이어서" },
+      { word: "household", meaning: "가정, 가구" },
+      { word: "inspire A to do", meaning: "A가 ~하도록 영감을 주다" },
+      { word: "energy conservation", meaning: "에너지 절약" },
+      { word: "environmental", meaning: "환경의" },
+      { word: "provide A with B", meaning: "A에게 B를 제공하다" },
+      { word: "commissioner", meaning: "위원, 행정 책임자" },
+      { word: "average", meaning: "평균의; 평균" },
+      { word: "head a project", meaning: "사업을 이끌다" },
+      { word: "energy consumption", meaning: "에너지 소비" },
+      { word: "as expected", meaning: "예상대로" },
+      { word: "infer", meaning: "추론하다" },
+      { word: "lack", meaning: "부족, 결핍" },
+      { word: "reminder", meaning: "상기시키는 것, 알림" },
+      { word: "environmental benefit", meaning: "환경적 편익" },
+      { word: "opposite effect", meaning: "역효과" },
+      { word: "neutralize", meaning: "상쇄하다, 무효화하다" },
+      { word: "default", meaning: "디폴트, 기본 설정" },
+      { word: "be defined as", meaning: "~로 정의되다" },
+      { word: "chooser", meaning: "선택하는 사람" },
+      { word: "opt out of", meaning: "~에서 빠지다, 탈퇴하다" },
+      { word: "effective at -ing", meaning: "~하는 데 효과적인" },
+      { word: "desirable", meaning: "바람직한" },
+      { word: "be subject to", meaning: "~의 영향을 받다, ~에 지배되다" },
+      { word: "stick with", meaning: "~을 고수하다" },
+      { word: "conscious effort", meaning: "의식적인 노력" },
+      { word: "give the impression that", meaning: "~라는 인상을 주다" },
+      { word: "recommend", meaning: "추천하다" },
+      { word: "particularly", meaning: "특히" },
+      { word: "in the case of", meaning: "~의 경우에" },
+      { word: "sustainable", meaning: "지속 가능한" },
+      { word: "institute", meaning: "시행하다, 도입하다" },
+      { word: "paper waste", meaning: "종이 낭비" },
+      { word: "establish A as B", meaning: "A를 B로 정하다, 확립하다" },
+      { word: "optional", meaning: "선택적인" },
+      { word: "survey", meaning: "설문 조사하다" },
+      { word: "disposable", meaning: "일회용의" },
+      { word: "choice architect", meaning: "선택 설계자" }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let wrongNotes = [];
+    const TOTAL_QUESTIONS = 15;
+    const PASS_CRITERIA = 12;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startQuiz() {
+      document.body.className = '';
+      currentIndex = 0;
+      correctCount = 0;
+      wrongNotes = [];
+      
+      currentQuestions = shuffleArray(wordDB).slice(0, TOTAL_QUESTIONS);
+      
+      switchScreen('quiz-screen');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const currentQ = currentQuestions[currentIndex];
+      
+      document.getElementById('progress-text').textContent = `${currentIndex + 1} / ${TOTAL_QUESTIONS}`;
+      document.getElementById('score-text').textContent = `정답: ${correctCount}개`;
+      document.getElementById('question-word').textContent = currentQ.word;
+      
+      let options = [currentQ.meaning];
+      let filteredDB = wordDB.filter(item => item.meaning !== currentQ.meaning);
+      let shuffledDB = shuffleArray(filteredDB);
+      
+      for(let i=0; i<3; i++) {
+        options.push(shuffledDB[i].meaning);
+      }
+      options = shuffleArray(options);
+      
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      options.forEach(optionText => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = optionText;
+        btn.onclick = () => checkAnswer(optionText, currentQ);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selectedMeaning, currentQ) {
+      if (selectedMeaning === currentQ.meaning) {
+        correctCount++;
+      } else {
+        wrongNotes.push(currentQ);
+      }
+      
+      currentIndex++;
+      
+      if (currentIndex < TOTAL_QUESTIONS) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      switchScreen('result-screen');
+      
+      const isPass = correctCount >= PASS_CRITERIA;
+      
+      const titleEl = document.getElementById('result-title');
+      const msgEl = document.getElementById('result-message');
+      const scoreEl = document.getElementById('result-score');
+      const iconEl = document.getElementById('result-icon');
+      const btnEl = document.getElementById('restart-btn');
+      
+      scoreEl.textContent = `${correctCount} / ${TOTAL_QUESTIONS}개`;
+      
+      if (isPass) {
+        document.body.className = 'pass-theme';
+        iconEl.textContent = '🎉';
+        titleEl.textContent = '축하합니다!';
+        titleEl.className = 'pass-text';
+        msgEl.textContent = '기준을 통과하셨습니다. 훌륭해요!';
+        btnEl.textContent = '다시 풀기';
+        btnEl.className = 'btn-pass';
+      } else {
+        document.body.className = 'fail-theme';
+        iconEl.textContent = '💪';
+        titleEl.textContent = '아쉽네요!';
+        titleEl.className = 'fail-text';
+        msgEl.textContent = '12개 이상 맞혀야 통과입니다. 다시 도전해 보세요!';
+        btnEl.textContent = '새로운 문제로 재도전';
+        btnEl.className = 'btn-fail';
+      }
+      
+      const wrongContainer = document.getElementById('wrong-list-container');
+      const wrongList = document.getElementById('wrong-list');
+      wrongList.innerHTML = '';
+      
+      if (wrongNotes.length > 0) {
+        wrongContainer.style.display = 'block';
+        wrongNotes.forEach(note => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${note.word}</strong> : ${note.meaning}`;
+          wrongList.appendChild(li);
+        });
+      } else {
+        wrongContainer.style.display = 'none';
+      }
+    }
+
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
